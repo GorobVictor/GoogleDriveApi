@@ -92,6 +92,17 @@ namespace GoogleDriveApi {
                     catch (Exception ex) { Error(ref result, ex); }
             return result;
         }
+        public string CreateFile(string idDirectory, List<System.IO.Stream> urlFiles) {
+            string result = "good";
+            for (int photo = 0; photo < urlFiles.Count(); photo++)
+                for (int error = 0; error < 5; error++) try {
+                        result = CreateFile(idDirectory, $"photo_{photo}.jpg", urlFiles[photo]);
+                        if (result.IndexOf(_messageError) == -1)
+                            break;
+                    }
+                    catch (Exception ex) { Error(ref result, ex); }
+            return result;
+        }
         /// <summary>
         /// Отправить фото
         /// </summary>
@@ -106,6 +117,26 @@ namespace GoogleDriveApi {
                 fileMetadata.Name = nameFile;
                 fileMetadata.Parents = new List<string> { idDirectory };
                 var file = Service.Files.Create(fileMetadata, GetStreamFromUrl(urlFile), "application/octet-stream");
+                file.Fields = "id, parents";
+                file.Upload();
+            }
+            catch (Exception ex) { Error(ref result, ex); }
+            return result;
+        }
+        /// <summary>
+        /// Отправить фото
+        /// </summary>
+        /// <param name="idDirectory">Папка для хранения</param>
+        /// <param name="nameFile">Название файла</param>
+        /// <param name="photo">Фото</param>
+        /// <returns>Возвращает состояние выполнения</returns>
+        public string CreateFile(string idDirectory, string nameFile, System.IO.Stream photo) {
+            string result = "good";
+            try {
+                File fileMetadata = new File();
+                fileMetadata.Name = nameFile;
+                fileMetadata.Parents = new List<string> { idDirectory };
+                var file = Service.Files.Create(fileMetadata, photo, "application/octet-stream");
                 file.Fields = "id, parents";
                 file.Upload();
             }
