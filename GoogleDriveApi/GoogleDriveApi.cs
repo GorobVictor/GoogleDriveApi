@@ -8,7 +8,7 @@ using System.Linq;
 using System.Threading;
 
 namespace GoogleDriveApi {
-    class DriveApi {
+    public class DriveApi {
         /// <summary>
         /// Массив ошибок
         /// </summary>
@@ -57,6 +57,24 @@ namespace GoogleDriveApi {
             return (result, files);
         }
         /// <summary>
+        /// Найти папку
+        /// </summary>
+        /// <param name="nameDirectory">Навзвание папки</param>
+        /// <returns>Возвращает состояние выполнения и массив папок</returns>
+        public (string, List<File>) SearchDirectory(string nameDirectory) {
+            List<File> files = new List<File>();
+            string result = "good";
+            try {
+                FilesResource.ListRequest listRequest = Service.Files.List();
+                listRequest.Q = $"mimeType = 'application/vnd.google-apps.folder' and name = '{nameDirectory}'";
+                listRequest.PageToken = null;
+                listRequest.Fields = "nextPageToken, files(id, name)";
+                files = listRequest.Execute().Files.ToList();
+            }
+            catch (Exception ex) { Error(ref result, ex); }
+            return (result, files);
+        }
+        /// <summary>
         /// Создать папку
         /// </summary>
         /// <param name="nameDirectory">Навзвание папки</param>
@@ -92,11 +110,17 @@ namespace GoogleDriveApi {
                     catch (Exception ex) { Error(ref result, ex); }
             return result;
         }
-        public string CreateFile(string idDirectory, List<System.IO.Stream> urlFiles) {
+        /// <summary>
+        /// Отправить массив фото в гугл диск
+        /// </summary>
+        /// <param name="idDirectory">Папка для хранения</param>
+        /// <param name="photos">Массив фото</param>
+        /// <returns>Возвращает состояние выполнения</returns>
+        public string CreateFile(string idDirectory, List<System.IO.Stream> photos) {
             string result = "good";
-            for (int photo = 0; photo < urlFiles.Count(); photo++)
+            for (int photo = 0; photo < photos.Count(); photo++)
                 for (int error = 0; error < 5; error++) try {
-                        result = CreateFile(idDirectory, $"photo_{photo}.jpg", urlFiles[photo]);
+                        result = CreateFile(idDirectory, $"photo_{photo}.jpg", photos[photo]);
                         if (result.IndexOf(_messageError) == -1)
                             break;
                     }
